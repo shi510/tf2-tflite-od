@@ -25,6 +25,7 @@ class TestAnchorMatcher(unittest.TestCase):
 class TestTransformBoxToGridedBox(unittest.TestCase):
 
     def test_equal_WH(self):
+        downsample_ratio = 8
         anchors = tf.constant([[128, 64], [64, 32], [32, 16]], shape=(3, 2), dtype=tf.float32)
         boxes = tf.constant(
             [
@@ -35,7 +36,7 @@ class TestTransformBoxToGridedBox(unittest.TestCase):
             shape=(1, 3, 5),
             dtype=tf.float32)
         img_wh = tf.constant([224, 224], dtype=tf.float32)
-        grid_wh = img_wh // 8
+        grid_wh = img_wh // downsample_ratio
         anchors /= img_wh
         boxes_x1y1 = boxes[..., 0:2] / img_wh
         boxes_x2y2 = boxes[..., 2:4] / img_wh
@@ -49,6 +50,9 @@ class TestTransformBoxToGridedBox(unittest.TestCase):
             x = grid_xy[batch_id][box_id][0]
             y = grid_xy[batch_id][box_id][1]
             return grided_boxes[batch_id][y][x]
+
+        self.assertEqual(grided_boxes.shape[1], (img_wh // downsample_ratio)[1])
+        self.assertEqual(grided_boxes.shape[2], (img_wh // downsample_ratio)[0])
 
         self.assertEqual(tf.reduce_sum(_get_grid_item(0, 0)[0], -1).numpy(), 0)
         self.assertEqual(tf.reduce_sum(_get_grid_item(0, 0)[1], -1).numpy(), 0)
@@ -69,6 +73,7 @@ class TestTransformBoxToGridedBox(unittest.TestCase):
         self.assertEqual(_get_grid_item(0, 2)[1].numpy()[5], 3) # class id
 
     def test_not_equal_WH(self):
+        downsample_ratio = 8
         anchors = tf.constant([[128, 64], [64, 32], [32, 16]], shape=(3, 2), dtype=tf.float32)
         boxes = tf.constant(
             [
@@ -79,7 +84,7 @@ class TestTransformBoxToGridedBox(unittest.TestCase):
             shape=(1, 3, 5),
             dtype=tf.float32)
         img_wh = tf.constant([448, 224], dtype=tf.float32)
-        grid_wh = img_wh // 8
+        grid_wh = img_wh // downsample_ratio
         anchors /= img_wh
         boxes_x1y1 = boxes[..., 0:2] / img_wh
         boxes_x2y2 = boxes[..., 2:4] / img_wh
@@ -93,6 +98,9 @@ class TestTransformBoxToGridedBox(unittest.TestCase):
             x = grid_xy[batch_id][box_id][0]
             y = grid_xy[batch_id][box_id][1]
             return grided_boxes[batch_id][y][x]
+
+        self.assertEqual(grided_boxes.shape[1], (img_wh // downsample_ratio)[1])
+        self.assertEqual(grided_boxes.shape[2], (img_wh // downsample_ratio)[0])
 
         self.assertEqual(tf.reduce_sum(_get_grid_item(0, 0)[0], -1).numpy(), 0)
         self.assertEqual(tf.reduce_sum(_get_grid_item(0, 0)[1], -1).numpy(), 0)
